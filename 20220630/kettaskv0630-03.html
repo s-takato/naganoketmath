@@ -186,7 +186,7 @@ Totexform(str):=( //210803from[renew]
         if(nn==1,
           tmp1=substring(out,plv_1_1,length(out)-1);
           if(contains(parL,fun), //210901from
-            tmp1=Addpar(tmp1); //211029
+            tmp1=addpar(tmp1); //211029
           ); //210901to
           out=replace(rep_2_1,"xx",tmp1);
         );
@@ -3966,6 +3966,7 @@ Ketinit(1.6);
 
 if(startflg==1,
   Kettaskinit();
+  Subsedit(3,"Student=");
   startflg=0;
 );
 
@@ -4007,36 +4008,40 @@ if(stok<=1,
       );
     );
   );
+  stoknow=stok;
   quest=[];
   nqinc=0;
 );
 
 if(stok>=2,
-  if(length(quest)==0,
-    tmp1=sqLL_stno;
-    sel=tmp1_(2..(length(tmp1)));
-    sel=apply(sel,if(isstring(#),parse(#),#));
-    quest=apply(1..(length(sel)),
+  if(stoknow==1,
+    if(length(quest)==0,
+      tmp1=sqLL_stno;
+      sel=tmp1_(2..(length(tmp1)));
+      sel=apply(sel,if(isstring(#),parse(#),#));
+      quest=apply(1..(length(sel)),
               quL_#_1+" "+quL_#_(sel_#));
-    rechead=text(stno)+";;"+text(stno);
-    Str=ansL_1;
-    Strnq=Str;
-    StrL_ch=Str;
-    npos=length(Str);
-    nqu=1;
-  );
-  if(ch==3,
+      rechead=text(stno)+";;"+text(stno);
+      Str=ansL_1;
+      Strnq=Str;
+      StrL_ch=Str;
+      npos=length(Str);
+      nqu=1;
+    );
     ch=2;
+    stoknow=2;
   );
-  Str=Textedit(2,"","");
-  Strnq=replace(Str,"?","");
-  StrL_2=Strnq;
+  if(stoknow==2,
+    Str=Textedit(2,"","");
+    Strnq=replace(Str,"?","");
+    StrL_2=Strnq;
+  );
 );
 
 drawcircle([px,posyL_ch],0.5,color->[1,0,0]);
 fillcircle([px,posyL_ch],0.5,color->[1,0,0]);
 
-if(stok>=2,
+if(stoknow==2,
   if(abs(nqinc)>0,
     ansL_nqu=Strnq;
     if(nqinc>0,nqu=min([nqu+nqinc,quall]));
@@ -4046,7 +4051,6 @@ if(stok>=2,
     Strnq=Str;
     StrL_2=Str;
     npos=length(Str);
-    Subsedit(2,Strnq);//220629readded
     nqinc=0;
   );
   tmp=select(1..(length(quest)),
@@ -4063,7 +4067,7 @@ if(stok>=2,
   );
 );
 
-if((recflg==1)&(stno>=2),
+if((recflg==1)&(stoknow==2),
   rec=rechead+Getcurtime()+";;";//210924
   ansL_nqu=Textedit(ch,"","");
   str="";
@@ -4071,6 +4075,7 @@ if((recflg==1)&(stno>=2),
     str=str+ansL_n+";;";
   );
   rec=rec+substring(str,0,length(str)-2);
+  Subsedit(3,rec);
   StrL_3=rec;
   recflg=0;
 );
@@ -4101,7 +4106,7 @@ if(funflg==1,
   funflg=0;
 );
 
-if(ch==2,
+if(stoknow==2,
   flg=0;
   Str=Textedit(2,"","");
   if(indexof(shL_nqu,"---")==0,
@@ -4125,9 +4130,6 @@ if(ch==2,
     tmp=shL_nqu;
     npos=length(tmp);
   );
-);
-
-if(ch==2,
   tpL=[T1.xy,T3.xy];
   dyL=[T1.y-T2.y,T3.y-T4.y];
   texstr="";
@@ -4143,28 +4145,45 @@ if(ch==2,
     dy=dyL_nc;
     ns=length(sL);
     forall(1..ns,nn,
-      strt=Gettexform(sL_nn);
-      tmp=tp+[1.2,-0.2];
-      Drwletter(tmp,strt,22);
+      flg=0; //220609from
+      tmp1=sL_nn;
+      if(indexof(tmp1,"(")>0,
+        tmp2=Bracket(tmp1);
+        tmp=tmp2_(-1);
+        if(tmp_2!=-1,
+          flg=1;
+          tmp2=select(tmp2,abs(#_2)==1);
+          tmp2=apply(tmp2,#_1);
+          tmp=tp+[0,-0.2];
+          forall(1..(length(tmp1)),mm,
+            tmp3=tmp1_mm;
+            clr=[0,0,0];
+            if(contains(tmp2,mm),clr=[1,0,0]);
+            tmp_1=tmp_1+1.25;
+            Drwletter(tmp,tmp3,22,clr);
+          );
+        );
+      );
+      if(flg==0,
+        strt=Gettexform(sL_nn);
+        tmp=tp+[1.2,-0.2];
+        Drwletter(tmp,strt,22);
+      );
       tp=tp-[0,dy];
       texstr=texstr+strt;
-    ); //220609to
+    );
   );
+  Subsedit(2,Str);
+  Subsedit(10,"Pg="+text(nqu));
 );
 
-if(stok>=2,
-  tmp="Pg="+text(nqu);
-,
-  tmp="Pg=";
+if(stoknow==2,
+  Subsedit(2,Str); 
 );
-Subsedit(10,tmp);
 
-forall(1..3,
-  if(#==ch,
-    Subsedit(#,Str);
-  ,
-    Subsedit(#,StrL_#);
-  );
+Subsedit(1,StrL_1);
+if(stok==1,
+  Subsedit(3,StrL_3);
 );
 
 Windispg();
@@ -4191,8 +4210,8 @@ var cdy = CindyJS({
     {name: "Text3", type: "EditableText", pos: [1.8285714285714285, -4.0, 0.11428571428571428], color: [0.0, 0.0, 0.0], fillcolor: [1.0, 1.0, 1.0], fillalpha: 1.0, minwidth: 535, text: "Student=", textsize: 24.0},
     {name: "T1", type: "Free", pos: [-3.5632183908045985, -4.0, -0.2298850574712644], color: [0.0, 0.0, 0.0], labeled: false, size: 6.0, border: false},
     {name: "T2", type: "Free", pos: [4.0, 3.6645161290322577, 0.25806451612903225], color: [1.0, 0.784, 0.0], labeled: false, size: 6.0, border: false},
-    {name: "T3", type: "Free", pos: [4.0, 2.838709677419355, 0.25806451612903225], color: [0.0, 0.0, 0.0], labeled: false, size: 6.0, border: false},
-    {name: "T4", type: "Free", pos: [4.0, 2.0129032258064514, 0.25806451612903225], color: [1.0, 0.784, 0.0], labeled: false, size: 6.0, border: false},
+    {name: "T3", type: "Free", pos: [4.0, 2.8387096774193545, 0.25806451612903225], color: [0.0, 0.0, 0.0], labeled: false, size: 6.0, border: false},
+    {name: "T4", type: "Free", pos: [4.0, 2.012903225806451, 0.25806451612903225], color: [1.0, 0.784, 0.0], labeled: false, size: 6.0, border: false},
     {name: "SW", type: "Free", pos: [1.4694412402425423, -4.0, 0.12563238528778808], color: [1.0,1.0,1.0], labeled: false, size: 2.0, border:false },
     {name: "Text10", type: "EditableText", pos: [4.0, 0.056, 0.08], color: [0.0, 0.0, 0.0], fillcolor: [1.0, 1.0, 1.0], fillalpha: 1.0, minwidth: 65, textsize: 18.0},
     {name: "Text47", type: "Button", pos: [4.0, -1.1428571428571428, 0.11428571428571428], color: [0.0, 0.0, 0.0], fillcolor: [1.0, 1.0, 0.0], fillalpha: 0.27272728085517883, text_fontfamily: "monospace", script: "funflg=1;name=\"fr(\";", text: "___", textsize: 14.0},
@@ -4304,8 +4323,8 @@ var cdy = CindyJS({
   ports: [{
     id: "CSCanvas",
     width: 846,
-    height: 692,
-    transform: [{visibleRect: [2.327076488126562, 27.35607693819892, 81.86137957120773, -37.69863910765031]}],
+    height: 702,
+    transform: [{visibleRect: [2.327076488126562, 27.35607693819892, 81.86137957120773, -38.629469702900934]}],
     grid: 5.0,
     background: "rgb(247,247,247)"
   }],
